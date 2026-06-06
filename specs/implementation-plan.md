@@ -41,7 +41,7 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ### Shopify Admin API client
 
-- [ ] Create `app/lib/shopify-admin.server.ts`:
+- [x] Create `app/lib/shopify-admin.server.ts`:
   - `getOrder(admin, orderId)` — `GET /admin/api/2026-07/orders/{id}.json` — verify order exists and get total price
   - `markOrderPaid(admin, orderId, amount, currency)` — `POST /admin/api/2026-07/orders/{id}/transactions.json`
 

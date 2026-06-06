@@ -33,4 +33,13 @@ Created `app/lib/tingee.server.ts` — server-only module for all Tingee API int
 
 Uses Node.js built-in `node:crypto` (no extra dependencies). TypeScript types clean — `npm run typecheck` passes.
 
+## 2026-06-06 — Phase 2 Backend: Shopify Admin API client
+
+Created `app/lib/shopify-admin.server.ts` — server-only module cho tương tác với Shopify Admin API:
+
+- **`getOrder(admin, orderId)`** — GraphQL query `order(id)`, trả về `{ id, totalPrice, currency }`. Chấp nhận orderId dạng số (`"123456"`) hoặc GID đầy đủ; tự động convert sang `gid://shopify/Order/{id}`.
+- **`markOrderPaid(admin, orderId, _amount, _currency)`** — GraphQL mutation `orderMarkAsPaid`, throw nếu `userErrors` không rỗng.
+
+**Lưu ý triển khai:** SDK `@shopify/shopify-app-react-router` chỉ expose GraphQL client (`admin.graphql`), không có REST client. Cả `authenticate.admin()` và `unauthenticated.admin()` đều trả về cùng type `AdminApiContext`, nên hàm này dùng được cho cả route có auth (Settings) lẫn IPN webhook (public). TypeScript type check sạch.
+
 <!-- Add entries below this line -->
