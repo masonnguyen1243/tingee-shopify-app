@@ -26,9 +26,9 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ### shopify.app.toml cleanup
 
-- [ ] Update `scopes` to `write_orders,read_orders` (remove template product/metaobject scopes)
-- [ ] Remove template `[product.metafields.*]` and `[metaobjects.*]` blocks
-- [ ] Set `application_url` to actual deployment URL (update after deploy)
+- [x] Update `scopes` to `write_orders,read_orders` (remove template product/metaobject scopes)
+- [x] Remove template `[product.metafields.*]` and `[metaobjects.*]` blocks
+- [x] Set `application_url` to actual deployment URL (update after deploy)
 
 ### Tingee API client
 

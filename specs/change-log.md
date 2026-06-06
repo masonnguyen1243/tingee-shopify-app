@@ -15,4 +15,10 @@ Added two Prisma models to `prisma/schema.prisma`:
 
 Migration `20260606043149_add_merchant_config_and_transaction` applied to `prisma/dev.sqlite`. Prisma Client regenerated.
 
+## 2026-06-06 — Phase 2 shopify.app.toml cleanup
+
+- Updated `scopes` from template values (`write_products,write_metaobjects,write_metaobject_definitions`) to `write_orders,read_orders` — the only scopes needed for the payment app.
+- Removed template `[product.metafields.app.demo_info]` and `[metaobjects.app.example]` blocks (and all sub-sections) that were scaffolded by the Shopify CLI template but are irrelevant to this app.
+- `application_url` remains `https://example.com` as a placeholder; will be updated once a production host is chosen (Phase 5).
+
 <!-- Add entries below this line -->
