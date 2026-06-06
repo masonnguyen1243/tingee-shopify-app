@@ -42,4 +42,14 @@ Created `app/lib/shopify-admin.server.ts` — server-only module cho tương tá
 
 **Lưu ý triển khai:** SDK `@shopify/shopify-app-react-router` chỉ expose GraphQL client (`admin.graphql`), không có REST client. Cả `authenticate.admin()` và `unauthenticated.admin()` đều trả về cùng type `AdminApiContext`, nên hàm này dùng được cho cả route có auth (Settings) lẫn IPN webhook (public). TypeScript type check sạch.
 
+## 2026-06-06 — Phase 2 Backend: Settings API routes
+
+Tạo 3 route endpoint phục vụ Settings UI (Phase 3):
+
+- **`app/routes/api.settings.get-banks.tsx`** — `GET /api/settings/get-banks?clientId=X&secretKey=Y` — xác thực admin Shopify, gọi `getBanks()` với credentials từ query params, trả về `{ banks: Bank[] }`. Trả 400 nếu thiếu params hoặc credentials không hợp lệ.
+- **`app/routes/api.settings.get-va-paging.tsx`** — `POST /api/settings/get-va-paging` với body `{ clientId, secretKey, page?, size? }` — gọi `getVirtualAccounts()`, trả về `{ items: VirtualAccount[], total }`.
+- **`app/routes/api.settings.save.tsx`** — `POST /api/settings/save` với body `{ clientId, secretKey, bankAccountId, accountNumber, bankBin }` — validate credentials bằng cách gọi `getBanks()` trước, sau đó upsert `MerchantConfig` scoped theo `session.shop`. Đảm bảo multi-tenancy: mỗi shop có một config riêng.
+
+Cả 3 route đều yêu cầu `authenticate.admin(request)`. TypeScript type check sạch.
+
 <!-- Add entries below this line -->

@@ -47,9 +47,9 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ### Settings API routes
 
-- [ ] Create `app/routes/api.settings.get-banks.tsx` — `GET` — calls `getBanks()`, returns bank list; requires admin auth
-- [ ] Create `app/routes/api.settings.get-va-paging.tsx` — `POST` — calls `getVirtualAccounts()`; requires admin auth
-- [ ] Create `app/routes/api.settings.save.tsx` — `POST` — validates credentials, saves `MerchantConfig` to DB; requires admin auth
+- [x] Create `app/routes/api.settings.get-banks.tsx` — `GET` — calls `getBanks()`, returns bank list; requires admin auth
+- [x] Create `app/routes/api.settings.get-va-paging.tsx` — `POST` — calls `getVirtualAccounts()`; requires admin auth
+- [x] Create `app/routes/api.settings.save.tsx` — `POST` — validates credentials, saves `MerchantConfig` to DB; requires admin auth
 
 ### Payment API routes
 
