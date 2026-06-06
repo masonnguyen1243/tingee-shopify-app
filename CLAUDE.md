@@ -1,5 +1,16 @@
 # CLAUDE.md — Tingee Payment App
 
+## Agent rules
+
+- **Read specs first.** Before writing any code, read `specs/product-spec.md` and `specs/implementation-plan.md`.
+- **One phase/task at a time.** Implement only the task currently in scope. Do not jump ahead.
+- **Keep it simple.** No extra libraries, no extra abstractions, no features beyond what the spec says.
+- **Do not change architecture** unless the spec is explicitly updated first.
+- **After each implementation:** update `specs/change-log.md` with what was done.
+- **After each implementation:** explain how to test the change (commands to run, what to verify).
+
+---
+
 ## Project overview
 
 Shopify embedded app that integrates the Tingee payment gateway, letting customers pay by scanning a VietQR bank-transfer QR code during checkout. Targets the Shopify App Store.

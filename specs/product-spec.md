@@ -1,74 +1,86 @@
-# Product Spec — Tingee Payment App (current state)
-
-> This document describes what the app **currently does** as of June 2026.
-> See [implementation-plan.md](implementation-plan.md) for what remains to be built.
+# Product Spec — Tingee Payment App
 
 ---
 
-## What the app is
+## App Goal
 
-A Shopify embedded app that will integrate the Tingee VietQR payment gateway into Shopify checkout. Merchants install the app, enter their Tingee credentials, and their customers can pay by scanning a QR code during checkout.
-
----
-
-## What is currently implemented
-
-### 1. Shopify OAuth & session management
-
-The app handles the full Shopify OAuth 2.0 install flow:
-
-- Merchant visits the install URL → redirected through Shopify OAuth → access token exchanged.
-- Sessions (offline tokens) are persisted in SQLite via Prisma (`Session` model).
-- Session storage is handled by `@shopify/shopify-app-session-storage-prisma`.
-- Session expiry and refresh-token fields are modelled in the schema.
-
-Relevant files: [app/shopify.server.ts](../app/shopify.server.ts), [app/db.server.ts](../app/db.server.ts), [prisma/schema.prisma](../prisma/schema.prisma)
-
-### 2. Embedded admin app shell
-
-A two-page embedded admin app (served inside the Shopify Admin iframe via App Bridge):
-
-- **Home page** (`/app`) — currently shows the default Shopify CLI scaffold: a "Generate a product" demo that calls Shopify Admin GraphQL to create a product with metafields and a metaobject. This content is placeholder and will be replaced.
-- **Additional page** (`/app/additional`) — placeholder page demonstrating multi-page navigation.
-- Navigation rendered via `<s-app-nav>` (Polaris web component).
-
-Relevant files: [app/routes/app.tsx](../app/routes/app.tsx), [app/routes/app._index.tsx](../app/routes/app._index.tsx), [app/routes/app.additional.tsx](../app/routes/app.additional.tsx)
-
-### 3. Shopify webhook handlers
-
-Two webhook subscriptions registered in `shopify.app.toml` and handled by route files:
-
-| Topic | Handler | Action |
-|---|---|---|
-| `app/uninstalled` | `webhooks.app.uninstalled.tsx` | Deletes the shop's offline session from DB |
-| `app/scopes_update` | `webhooks.app.scopes_update.tsx` | No-op acknowledgement |
-
-### 4. App configuration
-
-`shopify.app.toml` contains the app's Shopify config:
-
-- Client ID: `ed9bd15a90a8d007b3c038a507ca0190`
-- Embedded: true
-- API version: `2026-07`
-- Scopes: `write_products, write_metaobjects, write_metaobject_definitions` *(placeholder — needs updating)*
-- `application_url`: `https://example.com` *(placeholder — not yet set to real host)*
-
-### 5. Database schema
-
-Single model `Session` (Shopify's required session storage). No Tingee-specific tables exist yet.
+Enable Shopify merchants in Vietnam to accept bank-transfer payments via QR code at checkout, powered by the Tingee VietQR gateway. Customers scan a QR code, transfer money from their banking app, and the order is automatically marked paid — no manual reconciliation required.
 
 ---
 
-## What is NOT yet implemented
+## Target Users
 
-- Tingee API client (HMAC signing, QR generation, bank/VA fetching)
-- Merchant settings page (credentials form, bank account selector)
-- Settings API endpoints (`/api/settings/*`)
-- Payment endpoint (`/api/payment/create-qr`)
-- Payment status polling endpoint (`/api/payment/status`)
-- Tingee IPN webhook receiver (`/webhook/tingee`)
-- Shopify Admin API call to mark orders paid
-- Checkout UI Extension (QR display + polling in storefront checkout)
-- DB models for merchant config and transaction log
-- Correct scopes (`write_orders`, `read_orders`)
-- Production hosting configuration
+| User | Description |
+|---|---|
+| **Merchant** | Vietnamese Shopify store owner with a Tingee partner account. Installs the app, enters their Tingee credentials, and starts accepting QR payments. |
+| **Customer** | End buyer who chooses "Pay by QR code" at checkout and completes payment from any Vietnamese banking app. |
+
+---
+
+## Core User Flow
+
+### Merchant setup (once)
+1. Merchant installs the app from the Shopify App Store → OAuth redirects to Shopify Admin.
+2. Merchant opens the **Settings** page, enters their Tingee `Client ID` and `Secret Key`, and selects their bank account.
+3. Merchant saves settings → app validates credentials with Tingee API → confirmation shown.
+
+### Customer payment (every order)
+1. Customer reaches Shopify checkout and selects **"Pay by QR / VietQR"** as payment method.
+2. Checkout UI Extension calls the app's `/api/payment/create-qr` endpoint, which generates a VietQR code via Tingee API.
+3. QR code is displayed in the checkout. Customer scans and transfers the exact order amount from their banking app.
+4. Extension polls `/api/payment/status` every 3 seconds (up to 15 minutes).
+5. Tingee sends an IPN webhook to `/webhook/tingee` when payment is confirmed → app marks the Shopify order as paid via Admin API.
+6. Checkout UI Extension detects the paid status and advances the customer to the order confirmation page.
+
+---
+
+## Features In Scope
+
+- **OAuth install flow** — Shopify OAuth 2.0, session storage in database.
+- **Merchant settings page** — form to enter/update Tingee credentials and select bank account; credentials stored per-shop in DB.
+- **QR code generation** — `/api/payment/create-qr` calls Tingee API with HMAC-signed request, returns QR image/data to the checkout extension.
+- **Payment status polling** — `/api/payment/status` endpoint checked by the checkout extension every 3 s.
+- **Tingee IPN receiver** — `/webhook/tingee` verifies HMAC signature, marks order paid in Shopify, responds `{"code":"00","message":"Success"}`.
+- **Checkout UI Extension** — displays the QR code, countdown timer, and polls for payment confirmation.
+- **Transaction log** — DB table recording each payment attempt, status, and Tingee `transactionCode` (used for idempotency).
+- **Uninstall cleanup** — webhook deletes the shop's session and credentials on uninstall.
+
+---
+
+## Features Out of Scope
+
+- Refunds or partial captures via Tingee API.
+- Support for payment methods other than VietQR bank transfer.
+- Multi-currency or non-VND transactions.
+- Mobile app or standalone (non-Shopify) checkout.
+- Merchant-facing analytics or reporting dashboard.
+- Automated retry or reconciliation for failed/expired QR sessions.
+- Support for Shopify POS.
+
+---
+
+## Acceptance Criteria
+
+### Merchant settings
+- [ ] Merchant can enter and save Tingee `Client ID` and `Secret Key`.
+- [ ] App validates credentials against Tingee API before saving; shows a clear error if invalid.
+- [ ] Credentials are stored per-shop and never exposed in client-side code.
+- [ ] Merchant can update credentials at any time.
+
+### QR payment flow
+- [ ] Checkout displays a VietQR code with the correct amount and order reference.
+- [ ] QR code contains `content = "SHOPIFY{orderId}"` so the IPN handler can resolve the order.
+- [ ] Checkout extension polls for status and automatically advances to confirmation when payment is detected — no manual page refresh required.
+- [ ] If the customer does not pay within 15 minutes, the QR session expires and an appropriate message is shown.
+
+### IPN & order fulfillment
+- [ ] Tingee IPN HMAC signature is verified before processing; invalid requests return HTTP 400.
+- [ ] A `transactionCode` received more than once is ignored (idempotent).
+- [ ] On a valid IPN, the Shopify order is marked paid via Admin API within 5 seconds of the webhook arriving.
+- [ ] IPN handler always responds HTTP 200 with `{"code":"00","message":"Success"}` after processing.
+
+### Reliability & security
+- [ ] All DB queries are scoped to `session.shop`; no cross-merchant data leakage.
+- [ ] Tingee HMAC signing uses `HMAC_SHA512(timestamp + ":" + JSON.stringify(body), secretKey)`.
+- [ ] App passes Shopify's built-in webhook verification for `app/uninstalled`.
+- [ ] No Tingee credentials are logged or exposed in error responses.
