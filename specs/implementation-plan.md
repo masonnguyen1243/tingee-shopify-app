@@ -32,7 +32,7 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ### Tingee API client
 
-- [ ] Create `app/lib/tingee.server.ts`:
+- [x] Create `app/lib/tingee.server.ts`:
   - `buildHeaders(clientId, secretKey, body)` — computes `x-request-timestamp` and `x-signature` (HMAC-SHA512)
   - `verifyWebhookSignature(headers, body, secretKey)` — validates incoming IPN
   - `getBanks(clientId, secretKey)` — calls `GET /v1/get-banks`

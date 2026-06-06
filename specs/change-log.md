@@ -21,4 +21,16 @@ Migration `20260606043149_add_merchant_config_and_transaction` applied to `prism
 - Removed template `[product.metafields.app.demo_info]` and `[metaobjects.app.example]` blocks (and all sub-sections) that were scaffolded by the Shopify CLI template but are irrelevant to this app.
 - `application_url` remains `https://example.com` as a placeholder; will be updated once a production host is chosen (Phase 5).
 
+## 2026-06-06 — Phase 2 Backend: Tingee API client
+
+Created `app/lib/tingee.server.ts` — server-only module for all Tingee API interactions:
+
+- **`buildHeaders(clientId, secretKey, body)`** — generates the three required auth headers for every outgoing request: `x-client-id`, `x-request-timestamp` (UTC+7, `yyyyMMddHHmmssSSS`), and `x-signature` (HMAC-SHA512 over `timestamp:JSON.stringify(body)`).
+- **`verifyWebhookSignature(timestamp, rawBody, receivedSignature, secretKey)`** — validates incoming IPN requests using the same HMAC formula with timing-safe comparison.
+- **`getBanks(clientId, secretKey)`** — `GET /v1/get-banks`, returns `Bank[]`.
+- **`getVirtualAccounts(clientId, secretKey, opts?)`** — `POST /v1/get-va-paging` with pagination, returns `{ items: VirtualAccount[]; total: number }`.
+- **`generateVietQR(clientId, secretKey, bankBin, accountNumber, amount, content)`** — `POST /v1/generate-viet-qr`, returns `qrCodeImage` as base64 string.
+
+Uses Node.js built-in `node:crypto` (no extra dependencies). TypeScript types clean — `npm run typecheck` passes.
+
 <!-- Add entries below this line -->
