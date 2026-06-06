@@ -18,11 +18,11 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ### Database
 
-- [ ] Add `MerchantConfig` model to `prisma/schema.prisma`:
+- [x] Add `MerchantConfig` model to `prisma/schema.prisma`:
   - `shop` (String, unique), `clientId`, `secretKey`, `bankAccountId`, `accountNumber`, `bankBin`
-- [ ] Add `Transaction` model to `prisma/schema.prisma`:
+- [x] Add `Transaction` model to `prisma/schema.prisma`:
   - `transactionCode` (String, unique, nullable — set when IPN arrives), `orderId`, `shop`, `amount`, `vaAccountNumber`, `status` (PENDING / PAID / EXPIRED / UNMATCHED), `rawPayload`, `createdAt`, `updatedAt`
-- [ ] Run `prisma migrate dev` to apply schema changes
+- [x] Run `prisma migrate dev` to apply schema changes
 
 ### shopify.app.toml cleanup
 

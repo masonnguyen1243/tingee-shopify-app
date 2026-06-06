@@ -32,3 +32,28 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+
+model MerchantConfig {
+  id            Int    @id @default(autoincrement())
+  shop          String @unique
+  clientId      String
+  secretKey     String
+  bankAccountId String
+  accountNumber String
+  bankBin       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  transactionCode String?  @unique
+  orderId         String
+  shop            String
+  amount          Float
+  vaAccountNumber String
+  status          String   @default("PENDING")
+  rawPayload      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
