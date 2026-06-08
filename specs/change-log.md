@@ -72,4 +72,26 @@ Tạo 2 route endpoint phục vụ Checkout UI Extension:
 
 Cả hai endpoint đều **public** (không yêu cầu Shopify admin auth) — bảo vệ bằng CORS origin validation thay vì session token.
 
+## 2026-06-08 — Phase 2 Backend: Tingee IPN webhook handler
+
+Tạo `app/routes/webhook.tingee.tsx` — endpoint public nhận IPN (Instant Payment Notification) từ Tingee:
+
+**Flow xử lý:**
+1. Đọc raw body (để verify HMAC) và parse JSON.
+2. Dùng `accountNumber` từ payload để tra cứu `MerchantConfig` (VA account number của merchant).
+3. Xác minh `x-signature` bằng `verifyWebhookSignature()` (HMAC-SHA512). Trả HTTP 400 nếu sai — đây là trường hợp duy nhất không trả 200.
+4. Kiểm tra idempotency: nếu `transactionCode` đã tồn tại trong DB → trả success ngay, không xử lý lại.
+5. Parse `orderId` từ `content` field theo pattern `SHOPIFY{orderId}`.
+6. Dùng `unauthenticated.admin(shop)` để lấy Shopify Admin API context cho shop đó.
+7. Gọi `getOrder()` để verify order tồn tại và kiểm tra amount khớp (tolerance 1 đơn vị tiền tệ).
+8. Gọi `markOrderPaid()` để đánh dấu order đã thanh toán trong Shopify.
+9. Cập nhật row `Transaction` PENDING gần nhất: set `status = PAID`, `transactionCode`, `rawPayload`.
+10. Trả `{"code":"00","message":"Success"}` với HTTP 200.
+
+**Xử lý lỗi:** Mọi exception đều log đầy đủ (headers + body) và update Transaction sang `UNMATCHED`. Vẫn trả HTTP 200 để Tingee không retry vô hạn. Nếu không tìm được Transaction PENDING phù hợp, tạo row `UNMATCHED` mới.
+
+Helper `saveUnmatched()` xử lý cả hai case: cập nhật row PENDING có sẵn hoặc tạo mới khi không tìm được.
+
+TypeScript type check sạch — không có dependency mới.
+
 <!-- Add entries below this line -->

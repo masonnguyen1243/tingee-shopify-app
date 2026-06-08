@@ -69,7 +69,7 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ### Tingee IPN webhook
 
-- [ ] Create `app/routes/webhook.tingee.tsx`:
+- [x] Create `app/routes/webhook.tingee.tsx`:
   - `POST` — public endpoint (no Shopify auth)
   - Look up `shop` by matching `vaAccountNumber` in the `Transaction` table — this is the only way to identify the shop from an IPN request
   - Load the shop's `secretKey` from `MerchantConfig` and verify `x-signature` using HMAC-SHA512; return HTTP 400 if invalid
