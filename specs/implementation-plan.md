@@ -85,16 +85,16 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ## Phase 3 — Settings UI
 
-- [ ] Create `app/routes/app.settings.tsx`:
+- [x] Create `app/routes/app.settings.tsx`:
   - Form with `x-client-id` and `x-secret-key` fields
   - "Kiểm tra & Lấy danh sách" button — calls `api.settings.get-banks` and `api.settings.get-va-paging`, shows bank list and VA dropdown
   - Error banner if credentials invalid or no linked accounts
   - "Lưu cấu hình" button — calls `api.settings.save`
   - Success/error toast feedback
-- [ ] Add "Cài đặt" nav link in `app/routes/app.tsx` (`<s-link href="/app/settings">`)
-- [ ] Replace placeholder content in `app/routes/app._index.tsx` with a Tingee dashboard (config status, recent transactions, quick-start guide)
-- [ ] Remove `app/routes/app.additional.tsx` and replace with `app/routes/app.transactions.tsx` — a simple transaction log table (orderId, amount, status, createdAt)
-- [ ] Add "Lịch sử giao dịch" nav link in `app/routes/app.tsx`
+- [x] Add "Cài đặt" nav link in `app/routes/app.tsx` (`<s-link href="/app/settings">`)
+- [x] Replace placeholder content in `app/routes/app._index.tsx` with a Tingee dashboard (config status, recent transactions, quick-start guide)
+- [x] Remove `app/routes/app.additional.tsx` and replace with `app/routes/app.transactions.tsx` — a simple transaction log table (orderId, amount, status, createdAt)
+- [x] Add "Lịch sử giao dịch" nav link in `app/routes/app.tsx`
 
 ---
 

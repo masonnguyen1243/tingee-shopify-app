@@ -6,6 +6,24 @@ Format: `## YYYY-MM-DD — <summary>`
 
 ---
 
+## 2026-06-08 — Phase 3 Settings UI
+
+Triển khai toàn bộ Phase 3 — UI cho admin embedded app:
+
+- **`app/routes/app.settings.tsx`** — Trang cài đặt Tingee với form nhập `clientId`/`secretKey`, nút "Kiểm tra & Lấy danh sách" gọi song song `api.settings.get-banks` và `api.settings.get-va-paging`, dropdown `s-select` chọn tài khoản ảo, nút "Lưu cấu hình" POST đến `api.settings.save`. Hiển thị banner success nếu đã cấu hình; banner lỗi nếu credentials không hợp lệ; toast notification sau khi lưu.
+
+- **`app/routes/app._index.tsx`** (thay thế) — Dashboard Tingee: banner trạng thái cấu hình (warning nếu chưa cấu hình, success nếu đã cấu hình), bảng 5 giao dịch gần nhất, hướng dẫn nhanh.
+
+- **`app/routes/app.transactions.tsx`** (mới, thay thế `app.additional.tsx`) — Trang lịch sử giao dịch với bảng Polaris (`s-table`, `s-table-row`, `s-badge` với tone theo trạng thái), pagination đơn giản 20 rows/trang.
+
+- **`app/routes/app.tsx`** — Cập nhật nav: "Tổng quan", "Cài đặt", "Lịch sử giao dịch" (bỏ "Additional page").
+
+- **`app/routes/app.additional.tsx`** — Xóa (thay bằng transactions).
+
+- **`.react-router/types/`** — Regenerate type files qua `react-router typegen` để phản ánh routes mới.
+
+---
+
 ## 2026-06-06 — Phase 2 Database: add MerchantConfig and Transaction models
 
 Added two Prisma models to `prisma/schema.prisma`:
