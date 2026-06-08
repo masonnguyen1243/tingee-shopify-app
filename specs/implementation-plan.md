@@ -53,7 +53,7 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ### Payment API routes
 
-- [ ] Create `app/routes/api.payment.create-qr.tsx`:
+- [x] Create `app/routes/api.payment.create-qr.tsx`:
   - `POST` with `{ orderId, amount, currency, shop }`
   - Loads `MerchantConfig` for `shop` from DB
   - Calls `generateVietQR()` with `content = "SHOPIFY{orderId}"`
@@ -61,7 +61,7 @@ Tracks remaining work by phase. Check off tasks as they are completed.
   - Returns `{ qrCodeImage }` (base64 PNG)
   - Set CORS `Access-Control-Allow-Origin` to `*.myshopify.com`
 
-- [ ] Create `app/routes/api.payment.status.tsx`:
+- [x] Create `app/routes/api.payment.status.tsx`:
   - `GET ?orderId=X&shop=Y`
   - Looks up `Transaction` table by `orderId` + `shop`, returns `{ status }`
   - Returns `EXPIRED` if Transaction is PENDING and `createdAt` is older than 15 minutes

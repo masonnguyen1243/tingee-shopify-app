@@ -52,4 +52,24 @@ Tạo 3 route endpoint phục vụ Settings UI (Phase 3):
 
 Cả 3 route đều yêu cầu `authenticate.admin(request)`. TypeScript type check sạch.
 
+## 2026-06-08 — Phase 2 Backend: Payment API routes
+
+Tạo 2 route endpoint phục vụ Checkout UI Extension:
+
+- **`app/routes/api.payment.create-qr.tsx`** — `POST /api/payment/create-qr` với body `{ orderId, amount, currency, shop }`:
+  - Load `MerchantConfig` từ DB theo `shop`; trả 404 nếu chưa cấu hình.
+  - Hủy các `Transaction` PENDING quá 15 phút của cùng order (đánh dấu EXPIRED) trước khi tạo mới.
+  - Gọi `generateVietQR()` với `content = "SHOPIFY{orderId}"`.
+  - Tạo row `Transaction` mới với `status = PENDING`, lưu `vaAccountNumber = config.accountNumber` (để IPN handler tra cứu sau).
+  - Trả về `{ qrCodeImage }` (base64 PNG).
+  - CORS: reflect origin nếu `*.myshopify.com`, fallback về `https://www.myshopify.com`.
+
+- **`app/routes/api.payment.status.tsx`** — `GET /api/payment/status?orderId=X&shop=Y`:
+  - Tra cứu Transaction mới nhất theo `orderId + shop`.
+  - Tự động trả `EXPIRED` nếu status là `PENDING` và `createdAt` cách đây > 15 phút (không update DB — logic đọc thuần túy).
+  - Trả `NOT_FOUND` nếu không có row nào.
+  - CORS header giống create-qr.
+
+Cả hai endpoint đều **public** (không yêu cầu Shopify admin auth) — bảo vệ bằng CORS origin validation thay vì session token.
+
 <!-- Add entries below this line -->
