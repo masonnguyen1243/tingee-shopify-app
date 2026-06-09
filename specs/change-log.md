@@ -6,6 +6,20 @@ Format: `## YYYY-MM-DD — <summary>`
 
 ---
 
+## 2026-06-09 — Dev server fixes
+
+Khắc phục 3 vấn đề khiến `pnpm dev` không load được app trong Shopify Admin:
+
+- **`vite.config.ts`** — Thêm `host: true` vào `server` config. Vite mặc định chỉ bind trên `::1` (IPv6), trong khi Shopify CLI proxy kết nối qua `127.0.0.1` (IPv4), dẫn đến ECONNREFUSED qua tunnel. `host: true` khiến Vite bind trên `0.0.0.0` (tất cả interfaces).
+
+- **`shopify.web.toml`** — Đơn giản hóa lệnh `dev` từ `npx prisma migrate deploy && npm exec react-router dev` xuống còn `npm exec react-router dev`. Prisma generate + migrate mất ~35 giây, nhưng Shopify CLI proxy đã sẵn sàng sau ~2 giây — dẫn đến race condition: proxy nhận request trước khi Vite khởi xong. Migration chỉ cần chạy một lần khi schema thay đổi, không cần chạy mỗi lần dev start.
+
+- **`.env`** — Tạo file `.env` với `DATABASE_URL="file:./dev.sqlite"` (bị gitignore, phải tạo thủ công).
+
+**Kết quả:** App load thành công trong Shopify Admin, hiển thị dashboard "Tổng quan Tingee".
+
+---
+
 ## 2026-06-08 — Phase 3 Settings UI
 
 Triển khai toàn bộ Phase 3 — UI cho admin embedded app:
