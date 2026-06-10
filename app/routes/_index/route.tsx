@@ -3,8 +3,6 @@ import { redirect, Form, useLoaderData } from "react-router";
 
 import { login } from "../../shopify.server";
 
-import styles from "./styles.module.css";
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
 
@@ -19,38 +17,24 @@ export default function App() {
   const { showForm } = useLoaderData<typeof loader>();
 
   return (
-    <div className={styles.index}>
-      <div className={styles.content}>
-        <h1 className={styles.heading}>A short heading about [your app]</h1>
-        <p className={styles.text}>
-          A tagline about [your app] that describes your value proposition.
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", width: "100%", textAlign: "center", padding: "1rem" }}>
+      <div style={{ display: "grid", gap: "2rem", maxWidth: "40rem" }}>
+        <h1 style={{ margin: 0 }}>Tingee Payment App</h1>
+        <p style={{ margin: 0, fontSize: "1.1rem" }}>
+          VietQR bank transfer payment for Shopify checkout.
         </p>
         {showForm && (
-          <Form className={styles.form} method="post" action="/auth/login">
-            <label className={styles.label}>
+          <Form style={{ display: "flex", alignItems: "flex-end", gap: "1rem", justifyContent: "center" }} method="post" action="/auth/login">
+            <label style={{ display: "grid", gap: "0.25rem", textAlign: "left", fontSize: "1rem" }}>
               <span>Shop domain</span>
-              <input className={styles.input} type="text" name="shop" />
-              <span>e.g: my-shop-domain.myshopify.com</span>
+              <input style={{ padding: "0.4rem", fontSize: "1rem" }} type="text" name="shop" />
+              <span style={{ fontSize: "0.8rem", color: "#666" }}>e.g: my-shop-domain.myshopify.com</span>
             </label>
-            <button className={styles.button} type="submit">
+            <button style={{ padding: "0.5rem 1rem", fontSize: "1rem" }} type="submit">
               Log in
             </button>
           </Form>
         )}
-        <ul className={styles.list}>
-          <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
-          </li>
-          <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
-          </li>
-          <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
-          </li>
-        </ul>
       </div>
     </div>
   );
