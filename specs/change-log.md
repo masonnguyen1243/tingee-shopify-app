@@ -6,6 +6,31 @@ Format: `## YYYY-MM-DD — <summary>`
 
 ---
 
+## 2026-06-10 — Phase 4 Checkout UI Extension
+
+Triển khai Phase 4 — Checkout UI Extension cho phép khách hàng quét mã VietQR ngay trong trang checkout:
+
+- **`extensions/checkout-ui/package.json`** — Khai báo package cho extension workspace với dependency `@shopify/ui-extensions@^2025.7.4`.
+
+- **`extensions/checkout-ui/shopify.extension.toml`** — Config extension: target `purchase.checkout.block.render`, bật `network_access` để extension có thể gọi backend API.
+
+- **`extensions/checkout-ui/tsconfig.json`** — TypeScript config cho extension.
+
+- **`extensions/checkout-ui/src/Checkout.ts`** — Implementation đầy đủ:
+  - Mount → gọi `POST /api/payment/create-qr` với `checkoutToken` (dùng làm orderId), tổng tiền từ `api.cost.totalAmount`, shop domain từ `api.shop.myshopifyDomain`.
+  - State `loading` → hiển thị `Spinner` + text.
+  - State `ready` → hiển thị `Banner` hướng dẫn + `Image` QR code (base64 PNG) + số tiền + ghi chú nội dung CK.
+  - Polling mỗi 3 giây (tối đa 15 phút) gọi `GET /api/payment/status`. Khi `PAID` → chuyển sang banner thành công và dừng poll.
+  - State `expired` → banner cảnh báo + nút "Tạo mã QR mới".
+  - State `error` → banner lỗi + nút "Thử lại".
+  - Dùng state machine pattern với `root.replaceChildren()` để re-render.
+
+- **`shopify.app.toml`** — Đăng ký extension `[[extensions]]` với target `purchase.checkout.block.render`.
+
+**Ghi chú:** App URL được inject qua `process.env.SHOPIFY_APP_URL` lúc build (Shopify CLI tự inject khi chạy `shopify app dev`).
+
+---
+
 ## 2026-06-09 — Dev server fixes
 
 Khắc phục 3 vấn đề khiến `pnpm dev` không load được app trong Shopify Admin:

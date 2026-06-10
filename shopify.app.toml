@@ -25,3 +25,15 @@ redirect_urls = [ "https://example.com/api/auth" ]
 [build]
 include_config_on_deploy = true
 automatically_update_urls_on_dev = true
+
+[[extensions]]
+type = "ui_extension"
+name = "Tingee QR Payment"
+handle = "checkout-ui"
+
+  [[extensions.targeting]]
+  module = "./extensions/checkout-ui/src/Checkout.ts"
+  target = "purchase.checkout.block.render"
+
+  [extensions.capabilities]
+  network_access = true

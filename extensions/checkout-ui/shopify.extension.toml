@@ -1,0 +1,14 @@
+api_version = "2025-07"
+
+[[extensions]]
+type = "ui_extension"
+name = "Tingee QR Payment"
+handle = "checkout-ui"
+uid = "fddfc370-27c7-c30f-4ee0-a927194e2accadefd40c"
+
+  [[extensions.targeting]]
+  module = "./src/Checkout.ts"
+  target = "purchase.checkout.block.render"
+
+  [extensions.capabilities]
+  network_access = true

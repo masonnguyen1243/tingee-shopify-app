@@ -100,15 +100,15 @@ Tracks remaining work by phase. Check off tasks as they are completed.
 
 ## Phase 4 — Checkout UI Extension
 
-- [ ] Scaffold: `shopify app generate extension` → choose `checkout_ui_extension`
-- [ ] Implement `extensions/checkout-ui/src/Checkout.tsx`:
-  - On mount: call `api.payment.create-qr` with `useOrder()` id, `useTotalAmount()`, `useShop()` domain
-  - Loading state: show `<Spinner>`
-  - QR ready: show `<Image src={qrCodeImage}>` + amount text + instruction banner
+- [x] Scaffold: `shopify app generate extension` → choose `checkout_ui_extension`
+- [x] Implement `extensions/checkout-ui/src/Checkout.ts`:
+  - On mount: call `api.payment.create-qr` with `checkoutToken` (as orderId), `api.cost.totalAmount`, `api.shop.myshopifyDomain`
+  - Loading state: show `Spinner` + loading text
+  - QR ready: show `Image src={data:image/png;base64,...}` + amount text + instruction banner
   - Polling: call `api.payment.status` every 3 s (max 15 min); on `PAID` → show success banner + stop polling
   - On `EXPIRED`: show "QR code đã hết hạn" message with retry button that calls `create-qr` again
   - Error state: show error banner with retry button
-- [ ] Register extension target in `shopify.app.toml` (e.g., `purchase.checkout.payment-method.render`)
+- [x] Register extension target in `shopify.app.toml` (`purchase.checkout.block.render`)
 
 ---
 

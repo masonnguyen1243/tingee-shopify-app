@@ -1,0 +1,12 @@
+{
+  "name": "checkout-ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@shopify/ui-extensions": "^2025.7.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
