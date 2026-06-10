@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const [clientId, setClientId] = useState(config?.clientId ?? "");
   const [secretKey, setSecretKey] = useState("");
   const [virtualAccounts, setVirtualAccounts] = useState<VirtualAccount[]>([]);
-  const [selectedBankAccountId, setSelectedBankAccountId] = useState(
+  const [selectedVaAccountNumber, setSelectedVaAccountNumber] = useState(
     config?.bankAccountId ?? "",
   );
   const [checkError, setCheckError] = useState("");
@@ -79,8 +79,8 @@ export default function SettingsPage() {
 
       setVirtualAccounts(vaData.items);
       setHasChecked(true);
-      if (!selectedBankAccountId) {
-        setSelectedBankAccountId(vaData.items[0].bankAccountId);
+      if (!selectedVaAccountNumber) {
+        setSelectedVaAccountNumber(vaData.items[0].vaAccountNumber);
       }
     } catch {
       setCheckError("Đã xảy ra lỗi kết nối. Vui lòng thử lại.");
@@ -90,13 +90,13 @@ export default function SettingsPage() {
   }
 
   function handleSave() {
-    const va = virtualAccounts.find((v) => v.bankAccountId === selectedBankAccountId);
+    const va = virtualAccounts.find((v) => v.vaAccountNumber === selectedVaAccountNumber);
     if (!va) return;
     saveFetcher.submit(
       {
         clientId,
         secretKey,
-        bankAccountId: va.bankAccountId,
+        bankAccountId: va.vaAccountNumber,
         accountNumber: va.accountNumber,
         bankBin: va.bankBin,
       },
@@ -145,11 +145,11 @@ export default function SettingsPage() {
           <s-stack direction="block" gap="base">
             <s-select
               label="Tài khoản ảo (Virtual Account)"
-              value={selectedBankAccountId}
-              onChange={(e) => setSelectedBankAccountId(e.currentTarget.value)}
+              value={selectedVaAccountNumber}
+              onChange={(e) => setSelectedVaAccountNumber(e.currentTarget.value)}
             >
               {virtualAccounts.map((va) => (
-                <s-option key={va.bankAccountId} value={va.bankAccountId}>
+                <s-option key={va.vaAccountNumber} value={va.vaAccountNumber}>
                   {va.accountNumber} — {va.accountName}
                 </s-option>
               ))}

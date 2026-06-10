@@ -11,9 +11,12 @@ export interface Bank {
 
 export interface VirtualAccount {
   bankBin: string;
+  bankName: string;
   accountNumber: string;
   accountName: string;
-  bankAccountId: string;
+  vaAccountNumber: string;
+  accountType?: string;
+  status?: string;
 }
 
 interface TingeeResponse<T> {
