@@ -1,4 +1,12 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
+import { data, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { addDocumentResponseHeaders } from "./shopify.server";
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const headers = new Headers();
+  addDocumentResponseHeaders(request, headers);
+  return data(null, { headers });
+};
 
 export default function App() {
   return (

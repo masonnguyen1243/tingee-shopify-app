@@ -38,7 +38,7 @@ if (host === "localhost") {
 export default defineConfig({
   server: {
     host: true,
-    allowedHosts: [host],
+    allowedHosts: true,
     cors: {
       preflightContinue: true,
     },

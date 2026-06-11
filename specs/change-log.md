@@ -153,6 +153,23 @@ TypeScript type check sạch — không có dependency mới.
 
 <!-- Add entries below this line -->
 
+## 2026-06-11 — Fix: 3 lỗi khiến app không load được trong Shopify Admin (dev)
+
+**Lỗi 1: `ECONNREFUSED 127.0.0.1:<port>`**
+
+- **Nguyên nhân:** `shopify.web.toml` dùng `npm exec react-router dev` nhưng project dùng pnpm. `npm exec` không tìm được binary `react-router` trong pnpm workspace → Vite không khởi động → Shopify CLI proxy không có gì để forward đến.
+- **Fix — `shopify.web.toml`:** Đổi `dev = "npm exec react-router dev"` → `dev = "pnpm exec react-router dev"`.
+
+**Lỗi 2: `*.trycloudflare.com refused to connect`**
+
+- **Nguyên nhân:** Vite 6 có tính năng bảo mật `allowedHosts` — chỉ accept request có `Host` header khớp với hostname trong `SHOPIFY_APP_URL`. Cloudflare tunnel tạo URL ngẫu nhiên mới mỗi lần restart (`shopify app dev`), URL này thay đổi trước khi Vite đọc được env var → Vite reject toàn bộ request từ tunnel → browser thấy "refused to connect".
+- **Fix — `vite.config.ts`:** Đổi `allowedHosts: [host]` → `allowedHosts: true`. An toàn cho dev vì production dùng `react-router-serve`, không qua Vite server.
+
+**Lỗi 3: Blank page trong Shopify Admin iframe**
+
+- **Nguyên nhân:** `root.tsx` thiếu `addDocumentResponseHeaders`, dẫn đến HTML document response không có header `Content-Security-Policy: frame-ancestors`. Shopify Admin nhúng app qua iframe — browser block iframe nếu thiếu header này.
+- **Fix — `app/root.tsx`:** Thêm loader gọi `addDocumentResponseHeaders(request, headers)` và return `data(null, { headers })` để header được đính vào response thực sự.
+
 ## 2026-06-10 — Fix: VirtualAccount interface sai so với Tingee API thực tế
 
 **Lỗi:** Trang Cài đặt trả về `400 All fields are required` khi nhấn "Lưu cấu hình".
