@@ -4,10 +4,11 @@ import { generateVietQR } from "../lib/tingee.server";
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 
+const ALLOWED_ORIGINS = /^https:\/\/([\w-]+\.myshopify\.com|checkout\.shopify\.com|extensions\.shopifycdn\.com)/;
+
 function corsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get("Origin") ?? "";
-  const allowed =
-    origin.endsWith(".myshopify.com") ? origin : "https://www.myshopify.com";
+  const allowed = ALLOWED_ORIGINS.test(origin) ? origin : "https://www.myshopify.com";
   return {
     "Access-Control-Allow-Origin": allowed,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -35,7 +36,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     shop?: string;
   };
 
-  if (!orderId || !amount || !shop) {
+  const numericAmount = Number(amount);
+  if (!orderId || !numericAmount || !shop) {
     return Response.json(
       { error: "orderId, amount, and shop are required" },
       { status: 400, headers: cors }
@@ -67,15 +69,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     config.secretKey,
     config.bankBin,
     config.accountNumber,
-    amount,
+    numericAmount,
     content
   );
+  console.log("[tingee] qrCodeImage prefix:", qrCodeImage?.slice(0, 80));
 
   await db.transaction.create({
     data: {
       orderId,
       shop,
-      amount,
+      amount: numericAmount,
       vaAccountNumber: config.accountNumber,
       status: "PENDING",
     },

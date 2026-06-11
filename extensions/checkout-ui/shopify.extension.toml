@@ -12,3 +12,15 @@ uid = "fddfc370-27c7-c30f-4ee0-a927194e2accadefd40c"
 
   [extensions.capabilities]
   network_access = true
+  api_access = true
+
+  [[extensions.metafields]]
+  namespace = "tingee"
+  key = "api_url"
+
+  [extensions.settings]
+    [[extensions.settings.fields]]
+    key = "api_url"
+    type = "single_line_text_field"
+    name = "App API URL"
+    description = "URL tunnel của app (lấy từ terminal khi chạy pnpm dev)"

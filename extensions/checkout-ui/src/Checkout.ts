@@ -10,12 +10,6 @@ import {
 } from "@shopify/ui-extensions/checkout";
 import type { RootNode } from "@shopify/ui-extensions/checkout";
 
-// Injected by Shopify CLI at build time (process.env.SHOPIFY_APP_URL)
-declare const process: { env: { SHOPIFY_APP_URL?: string } };
-const APP_URL = (
-  typeof process !== "undefined" ? (process.env.SHOPIFY_APP_URL ?? "") : ""
-).replace(/\/$/, "");
-
 type Phase = "loading" | "ready" | "paid" | "expired" | "error";
 
 interface State {
@@ -30,6 +24,7 @@ export default extension(
   "purchase.checkout.block.render",
   (root, api) => {
     const shop = api.shop.myshopifyDomain;
+    let APP_URL = "";
     let state: State = { phase: "loading" };
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
     let pollExpiry = 0;
@@ -162,7 +157,7 @@ export default extension(
             blockAlignment: "center",
           });
           const img = root.createComponent(Image, {
-            source: `data:image/png;base64,${state.qrCodeImage}`,
+            source: state.qrCodeImage!,
             accessibilityDescription: "Mã QR thanh toán VietQR",
           });
           center.appendChild(img);
@@ -235,7 +230,7 @@ export default extension(
 
           const retryBtn = root.createComponent(Button, {
             kind: "secondary",
-            onPress: () => void createQR(),
+            onPress: () => void init(),
           });
           retryBtn.appendChild(root.createText("Thử lại"));
           stack.appendChild(retryBtn);
@@ -246,7 +241,52 @@ export default extension(
       return [stack];
     }
 
-    // Kick off on mount
-    void createQR();
+    async function resolveAppUrl(): Promise<{ url: string; debug: string }> {
+      // 1. Extension settings (manually configured in checkout editor)
+      const settingsUrl = (api.settings.current?.api_url as string | undefined) ?? "";
+      if (settingsUrl) return { url: settingsUrl.replace(/\/$/, ""), debug: "settings" };
+
+      // 2. Shop metafield via Storefront API (auto-synced by admin app loader)
+      let queryDebug = "not tried";
+      try {
+        const result = await api.query<{
+          shop: { metafield: { value: string } | null };
+        }>(
+          `query { shop { metafield(namespace: "tingee", key: "api_url") { value } } }`
+        );
+        const value = result?.data?.shop?.metafield?.value;
+        queryDebug = value ? `ok:${value.slice(0, 40)}` : `null (errors: ${JSON.stringify(result?.errors)})`;
+        if (value) return { url: value.replace(/\/$/, ""), debug: "storefront" };
+      } catch (e) {
+        queryDebug = `throw: ${String(e).slice(0, 60)}`;
+      }
+
+      return { url: "", debug: queryDebug };
+    }
+
+    async function init() {
+      const { url, debug } = await resolveAppUrl();
+      APP_URL = url;
+      if (APP_URL) {
+        void createQR();
+      } else {
+        update({
+          phase: "error",
+          errorMessage: `App URL chưa có. Query: [${debug}]`,
+        });
+      }
+    }
+
+    // React to settings changes (user configures URL in checkout editor)
+    api.settings.subscribe(() => {
+      const newUrl = ((api.settings.current?.api_url as string | undefined) ?? "").replace(/\/$/, "");
+      if (newUrl && newUrl !== APP_URL) {
+        APP_URL = newUrl;
+        void createQR();
+      }
+    });
+
+    render(root);   // show loading spinner immediately
+    void init();    // resolve URL then load QR
   }
 );
