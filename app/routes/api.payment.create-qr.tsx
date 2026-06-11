@@ -68,7 +68,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     config.clientId,
     config.secretKey,
     config.bankBin,
-    config.accountNumber,
+    config.bankAccountId,
     numericAmount,
     content
   );
@@ -79,7 +79,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       orderId,
       shop,
       amount: numericAmount,
-      vaAccountNumber: config.accountNumber,
+      vaAccountNumber: config.bankAccountId,
       status: "PENDING",
     },
   });

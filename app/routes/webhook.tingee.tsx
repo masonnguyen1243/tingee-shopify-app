@@ -1,8 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
-import { unauthenticated } from "../shopify.server";
 import { verifyWebhookSignature } from "../lib/tingee.server";
-import { getOrder, markOrderPaid } from "../lib/shopify-admin.server";
 
 const SUCCESS = { code: "00", message: "Success" };
 
@@ -23,14 +21,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return Response.json(SUCCESS);
   }
 
-  // accountNumber identifies which VA received the payment → look up shop
+  // accountNumber in IPN body is the real bank account number → look up shop by accountNumber
   const vaAccountNumber = (body.accountNumber as string | undefined) ?? "";
   if (!vaAccountNumber) {
     console.error("[Tingee IPN] Missing accountNumber in payload:", rawBody);
     return Response.json(SUCCESS);
   }
 
-  // Identify the shop via MerchantConfig.accountNumber
+  // Identify the shop via MerchantConfig.accountNumber (real bank account sent by Tingee in IPN)
   const config = await db.merchantConfig.findFirst({
     where: { accountNumber: vaAccountNumber },
   });
@@ -71,60 +69,39 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const orderId = orderIdMatch[1];
   const amount = typeof body.amount === "number" ? body.amount : parseFloat(String(body.amount ?? "0"));
 
-  try {
-    const { admin } = await unauthenticated.admin(shop);
+  // At IPN time, the Shopify order may not exist yet (customer pays before placing order).
+  // Mark transaction PAID so the checkout extension polling can detect it and show success.
+  // The actual Shopify order will be marked paid via the orders/create webhook once placed.
+  const pendingTx = await db.transaction.findFirst({
+    where: { orderId, shop, status: { in: ["PENDING", "UNMATCHED"] } },
+    orderBy: { createdAt: "desc" },
+  });
 
-    const order = await getOrder(admin, orderId);
-    const orderAmount = parseFloat(order.totalPrice);
-
-    // Allow 1-unit tolerance for floating-point differences
-    if (Math.abs(orderAmount - amount) > 1) {
-      throw new Error(`Amount mismatch: IPN=${amount}, order=${orderAmount}`);
-    }
-
-    await markOrderPaid(admin, orderId, amount, order.currency);
-
-    // Update the most recent PENDING transaction for this order
-    const pendingTx = await db.transaction.findFirst({
-      where: { orderId, shop, status: "PENDING" },
-      orderBy: { createdAt: "desc" },
+  if (pendingTx) {
+    await db.transaction.update({
+      where: { id: pendingTx.id },
+      data: {
+        status: "PAID",
+        transactionCode: transactionCode || null,
+        rawPayload: rawBody,
+      },
     });
-
-    if (pendingTx) {
-      await db.transaction.update({
-        where: { id: pendingTx.id },
-        data: {
-          status: "PAID",
-          transactionCode: transactionCode || null,
-          rawPayload: rawBody,
-        },
-      });
-    } else {
-      await db.transaction.create({
-        data: {
-          orderId,
-          shop,
-          amount,
-          vaAccountNumber,
-          status: "PAID",
-          transactionCode: transactionCode || null,
-          rawPayload: rawBody,
-        },
-      });
-    }
-
-    return Response.json(SUCCESS);
-  } catch (err) {
-    console.error("[Tingee IPN] Failed to process payment:", {
-      error: String(err),
-      orderId,
-      shop,
-      headers: Object.fromEntries(request.headers),
-      body: rawBody,
+  } else {
+    await db.transaction.create({
+      data: {
+        orderId,
+        shop,
+        amount,
+        vaAccountNumber,
+        status: "PAID",
+        transactionCode: transactionCode || null,
+        rawPayload: rawBody,
+      },
     });
-    await saveUnmatched(vaAccountNumber, shop, body, transactionCode, rawBody, orderId, amount);
-    return Response.json(SUCCESS);
   }
+
+  console.log(`[Tingee IPN] Payment recorded — orderId: ${orderId}, amount: ${amount}, shop: ${shop}`);
+  return Response.json(SUCCESS);
 };
 
 async function saveUnmatched(

@@ -4,6 +4,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "shopify app dev",
+    "dev:clean": "pkill -9 -f 'shopify app dev' 2>/dev/null; pkill -9 -f '@react-router' 2>/dev/null; pkill -9 -f 'vite' 2>/dev/null; sleep 2 && pnpm dev",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
     "deploy": "shopify app deploy",

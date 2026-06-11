@@ -20,8 +20,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }),
   ]);
 
+  const appUrl = (process.env.SHOPIFY_APP_URL ?? "").replace(/\/$/, "");
+
   return {
     config,
+    ipnUrl: appUrl ? `${appUrl}/webhook/tingee` : "",
     recentTransactions: recentTransactions.map((t) => ({
       ...t,
       createdAt: t.createdAt.toISOString(),
@@ -37,7 +40,7 @@ function statusTone(status: string): "success" | "caution" | "critical" | "neutr
 }
 
 export default function Index() {
-  const { config, recentTransactions } = useLoaderData<typeof loader>();
+  const { config, ipnUrl, recentTransactions } = useLoaderData<typeof loader>();
 
   return (
     <s-page heading="Tổng quan Tingee">
@@ -89,6 +92,30 @@ export default function Index() {
             </s-table>
             <s-link href="/app/transactions">Xem tất cả giao dịch →</s-link>
           </>
+        )}
+      </s-section>
+
+      <s-section slot="aside" heading="IPN Webhook URL">
+        {ipnUrl ? (
+          <>
+            <s-paragraph>
+              Dán URL này vào cấu hình IPN trong Tingee portal:
+            </s-paragraph>
+            <s-text-field
+              label="IPN URL"
+              value={ipnUrl}
+              read-only
+            />
+            <s-paragraph>
+              <s-text type="subdued">
+                URL thay đổi mỗi lần restart dev. Trên production URL sẽ cố định.
+              </s-text>
+            </s-paragraph>
+          </>
+        ) : (
+          <s-paragraph>
+            <s-text type="subdued">Chưa có APP URL. Khởi động lại app.</s-text>
+          </s-paragraph>
         )}
       </s-section>
 
