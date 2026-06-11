@@ -153,6 +153,35 @@ TypeScript type check sạch — không có dependency mới.
 
 <!-- Add entries below this line -->
 
+## 2026-06-11 — Fix: QR code hiển thị thành công trong checkout (4 lỗi)
+
+Sau khi extension đã render được UI, phát hiện và sửa 4 vấn đề ngăn QR code hiển thị:
+
+**Lỗi 1: `api.appMetafields` không hỗ trợ shop-level metafields**
+
+- **Nguyên nhân:** `api.appMetafields` trong checkout extension chỉ trả về metafields của cart/order/product. Shop-level metafields (namespace `tingee`, key `api_url`) luôn trả về array rỗng dù mutation `metafieldsSet` thành công.
+- **Fix:** Chuyển sang đọc URL qua **Storefront API** (`api.query`) thay vì `api.appMetafields`. Trong `app.tsx`, gọi thêm `metafieldDefinitionCreate` với `access: { storefront: PUBLIC_READ }` để metafield có thể đọc được qua Storefront API.
+- **Files:** `app/routes/app.tsx`, `extensions/checkout-ui/src/Checkout.ts`
+
+**Lỗi 2: Extension thiếu capability `api_access`**
+
+- **Nguyên nhân:** `api.query()` (Storefront API) yêu cầu khai báo capability riêng `api_access = true`. Nếu thiếu, Shopify ném `ExtensionUsageError: Extension is not allowed to use the Storefront API`.
+- **Fix — `extensions/checkout-ui/shopify.extension.toml`:** Thêm `api_access = true` vào `[extensions.capabilities]`.
+
+**Lỗi 3: `process.env.SHOPIFY_APP_URL` crash extension**
+
+- **Nguyên nhân:** Extension được bundle để chạy trong browser sandbox của Shopify — `process` không tồn tại ở runtime → `ReferenceError` crash toàn bộ extension (silent, không hiển thị gì).
+- **Fix:** Xóa hoàn toàn `process.env` khỏi extension. Thay bằng `resolveAppUrl()` async: ưu tiên `api.settings.current?.api_url`, fallback sang `api.query` → Storefront API.
+
+**Lỗi 4: QR image source bị double prefix**
+
+- **Nguyên nhân:** Tingee API đã trả về chuỗi full data URI (`data:image/png;base64,...`). Extension lại wrap thêm một lần nữa thành `data:image/png;base64,data:image/png;base64,...` → browser không parse được → ảnh broken.
+- **Fix — `extensions/checkout-ui/src/Checkout.ts`:** Đổi `source: \`data:image/png;base64,${state.qrCodeImage}\`` → `source: state.qrCodeImage!`.
+
+**Kết quả:** QR code VietQR hiển thị đúng trong checkout. Extension tự động lấy URL từ Storefront API mỗi khi merchant mở admin app.
+
+---
+
 ## 2026-06-11 — Fix: 3 lỗi khiến app không load được trong Shopify Admin (dev)
 
 **Lỗi 1: `ECONNREFUSED 127.0.0.1:<port>`**
